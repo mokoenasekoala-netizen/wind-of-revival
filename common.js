@@ -5,22 +5,29 @@ var B="https://firestore.googleapis.com/v1/projects/"+C.projectId+"/databases/(d
 function f(o,k){return o.fields&&o.fields[k]?(o.fields[k].stringValue||""):""}
 function yt(u){var m=(u||"").match(/(?:youtu\.be\/|v=|embed\/|live\/)([\w-]{11})/);return m&&m[1]}
 var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add("on");io.unobserve(e.target)}})},{threshold:.1});
+var MASK=["title","speaker","date","url","scripture","note","preview"].map(function(k){return"&mask.fieldPaths="+k}).join("");
 var WR=window.WR={ready:ready,f:f,yt:yt,
- sermons:function(n){return fetch(B+"sermons?orderBy=date%20desc&pageSize="+n).then(function(r){return r.json()}).then(function(d){return d.documents||[]}).catch(function(){return[]})},
+ sermons:function(n){return fetch(B+"sermons?orderBy=date%20desc&pageSize="+n+MASK).then(function(r){return r.json()}).then(function(d){return d.documents||[]}).catch(function(){return[]})},
+ sermon:function(id){return fetch(B+"sermons/"+encodeURIComponent(id)).then(function(r){return r.ok?r.json():null}).catch(function(){return null})},
  isLive:function(){return fetch(B+"settings/live").then(function(r){return r.ok?r.json():null}).then(function(d){return !!(d&&d.fields&&d.fields.live&&d.fields.live.booleanValue===true)}).catch(function(){return false})},
  liveSrc:function(){return "https://www.youtube.com/embed/live_stream?channel="+C.youtubeChannelId+"&autoplay=1&mute=1"},
  card:function(o,i){
-  var u=f(o,"url"),id=yt(u),c=document.createElement("div");c.className="card sv rv";c.style.setProperty("--i",i%3);c.tabIndex=0;c.setAttribute("role","button");
+  var rid=o.name.split("/").pop(),readUrl="sermon.html?id="+encodeURIComponent(rid),hasRead=!!f(o,"preview"),u=f(o,"url"),id=yt(u),c=document.createElement("div");c.className="card sv rv";c.style.setProperty("--i",i%3);c.tabIndex=0;c.setAttribute("role","button");
   var th=document.createElement("div");th.className="th";if(id)th.style.backgroundImage="url(https://i.ytimg.com/vi/"+id+"/hqdefault.jpg)";
   var bd=document.createElement("div");bd.className="bd";
   var h=document.createElement("h3");h.textContent=f(o,"title");
   var p=document.createElement("p");p.textContent=[f(o,"speaker"),f(o,"date")].filter(Boolean).join(" · ");
   var s=document.createElement("p");s.className="when";s.textContent=f(o,"scripture");
   var n=document.createElement("p");n.textContent=f(o,"note");
-  bd.append(h,p,s,n);c.append(th,bd);
+  bd.append(h,p,s,n);
+  if(hasRead){var a=document.createElement("a");a.className="rd";a.href=readUrl;a.setAttribute("data-en","Read the sermon →");a.setAttribute("data-st","Bala thuto →");
+   var st=false;try{st=localStorage.getItem("wrlang")==="st"}catch(e){}
+   a.textContent=st?"Bala thuto →":"Read the sermon →";a.onclick=function(e){e.stopPropagation()};bd.append(a)}
+  c.append(th,bd);
   function go(){
    if(id){if(th.classList.contains("pl"))return;th.textContent="";var fr=document.createElement("iframe");fr.src="https://www.youtube.com/embed/"+id+"?autoplay=1";fr.title=h.textContent;fr.allow="autoplay; fullscreen";fr.allowFullscreen=true;th.append(fr);th.classList.add("pl")}
    else if(/^https?:/.test(u))open(u,"_blank","noopener");
+   else if(hasRead)location.href=readUrl;
   }
   c.onclick=go;c.onkeydown=function(e){if(e.key==="Enter")go()};
   io.observe(c);return c;

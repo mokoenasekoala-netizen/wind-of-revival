@@ -109,3 +109,11 @@ footer small{opacity:.75}
 .btn.o2{background:none;box-shadow:none;border:2px solid var(--violet);color:var(--ink);margin-left:10px}
 .srch{max-width:420px;margin:0 0 28px}
 @media(max-width:760px){.hero,.ph{padding-top:150px}html{scroll-padding-top:110px}}
+
+.rd{display:inline-block;margin-top:8px;color:var(--rose);font-weight:600;text-decoration:none}.rd:hover{text-decoration:underline}
+.read{max-width:68ch;margin:0 auto;font-size:1.12rem;line-height:1.85}
+.read p{margin:0 0 1.2em;white-space:pre-line}
+.read h3{margin:1.6em 0 .5em;font-size:1.5rem}
+.read blockquote{margin:1.4em 0;padding:6px 0 6px 20px;border-left:5px solid var(--flame);color:var(--mute);font-style:italic;white-space:pre-line}
+.ph .mt{margin-top:8px;opacity:.9}
+@media print{header,footer,#bar,.noprint{display:none!important}.ph{background:none!important;color:#000;padding:10px 0}.ph:after{display:none}body{background:#fff;color:#000}.rv{opacity:1!important;transform:none!important}}
