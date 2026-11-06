@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sermons – Wind of Revival International Church</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Outfit:wght@400;600&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-wr>
+<div id="bar"></div>
+<header id="hd"><div class="wrap">
+<a class="brand" href="index.html"><img src="images/logo.jpg" alt="Wind of Revival logo"><span>Wind of Revival<br>International Church</span></a>
+<nav aria-label="Main">
+<a href="index.html" data-en="Home" data-st="Lehae">Home</a>
+<a href="live.html" data-en="Live" data-st="Ka kotloloho">Live</a>
+<a href="sermons.html" data-en="Sermons" data-st="Lithuto">Sermons</a>
+<a href="index.html#services" data-en="Services" data-st="Lits'ebeletso">Services</a>
+<a href="index.html#connect" data-en="Connect" data-st="Ikopanye">Connect</a>
+</nav>
+<a class="lp" id="livepill" href="live.html" hidden data-en="LIVE" data-st="KA KOTLOLOHO">LIVE</a>
+<button class="lang" id="lang" aria-label="Switch language">Sesotho</button>
+</div></header>
+<main>
+<div class="ph"><div class="wrap">
+<h1 data-en="Sermons" data-st="Lithuto">Sermons</h1>
+<p data-en="Watch and listen again to the messages from our services." data-st="Sheba 'me u mamele hape melaetsa ea lits'ebeletso tsa rōna.">Watch and listen again to the messages from our services.</p>
+</div></div>
+<section style="padding-top:50px"><div class="wrap">
+<label for="q" class="p" data-en="Search" data-st="Batla">Search</label>
+<input id="q" class="srch" type="search" data-en-ph="Title, speaker or scripture" data-st-ph="Sehlooho, mbuelli kapa temana ea Bibele" placeholder="Title, speaker or scripture">
+<div class="grid" id="sg"></div>
+<p id="none" class="p" hidden data-en="No sermons found." data-st="Ha ho lithuto tse fumanehang.">No sermons found.</p>
+</div></section>
+</main>
+<footer>
+<svg class="wave" viewBox="0 0 1200 90" preserveAspectRatio="none" aria-hidden="true"><path d="M0 50 C200 100 400 0 600 40 S1000 90 1200 30 V90 H0Z"/></svg>
+<div class="wrap"><img src="images/logo.jpg" alt="" width="64" height="64" style="border-radius:50%"><h3 style="margin:.4em 0 .1em">Wind of Revival International Church</h3><p style="margin:0 0 14px;opacity:.85">Hanyenye Maletlatsoana, Maputsoe, Lesotho</p><small>© 2026 Wind of Revival International Church</small></div>
+</footer>
+<script src="config.js"></script>
+<script src="common.js"></script>
+<script>
+(function(){
+ var g=document.getElementById("sg"),q=document.getElementById("q"),none=document.getElementById("none"),all=[];
+ function draw(){
+  var s=q.value.trim().toLowerCase(),k=0;g.textContent="";
+  all.forEach(function(o){
+   var t=(WR.f(o,"title")+" "+WR.f(o,"speaker")+" "+WR.f(o,"scripture")+" "+WR.f(o,"note")+" "+WR.f(o,"date")).toLowerCase();
+   if(!s||t.indexOf(s)>-1)g.append(WR.card(o,k++%3));
+  });
+  none.hidden=k>0;
+ }
+ q.oninput=draw;
+ if(WR.ready)WR.sermons(100).then(function(d){all=d;draw()});else draw();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+[build]
+  publish = "."
+[functions]
+  directory = "netlify/functions"
+
+# Short, clean web addresses (the .html versions keep working too)
+[[redirects]]
+  from = "/crew"
+  to = "/admin.html"
+  status = 200
+[[redirects]]
+  from = "/live"
+  to = "/live.html"
+  status = 200
+[[redirects]]
+  from = "/sermons"
+  to = "/sermons.html"
+  status = 200
+
+# Keep the crew page out of Google
+[[headers]]
+  for = "/admin.html"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+[[headers]]
+  for = "/crew"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"

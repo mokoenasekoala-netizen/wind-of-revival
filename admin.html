@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>Media Crew – Wind of Revival</title>
+<style>
+body{margin:0;background:#f4f0ff;color:#1d1738;font:16px/1.5 system-ui,sans-serif;padding:20px}
+main{max-width:640px;margin:auto}h1{font-size:1.6rem;margin:.2em 0}h2{font-size:1.15rem;margin:0 0 10px}
+.box{background:#fff;border:1px solid #ddd5f3;border-radius:14px;padding:18px;margin:16px 0}
+label{display:block;font-weight:600;margin:10px 0 4px}
+input,textarea{width:100%;font:inherit;padding:10px;border:1px solid #cfc6ea;border-radius:8px}
+button,.b{display:inline-block;background:linear-gradient(135deg,#ff7a3d,#e0457b);color:#fff;border:0;border-radius:99px;padding:10px 20px;font:inherit;font-weight:600;cursor:pointer;text-decoration:none;margin:6px 6px 0 0}
+button.g{background:#555}button.sm{padding:4px 12px;font-size:.85rem;background:#999}
+.row{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid #eee}
+#ls{font-weight:600}.chk{display:flex;gap:8px;align-items:center;font-weight:400}.chk input{width:auto}
+</style></head><body><main>
+<div id="login" class="box"><h1>Media crew login</h1>
+<label for="em">Email</label><input id="em" type="email" autocomplete="username">
+<label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password">
+<button id="li">Log in</button> <span id="lm"></span></div>
+
+<div id="app" hidden>
+<h1>Media crew <button class="g sm" id="lo">Log out</button></h1>
+
+<div class="box"><h2>Live service</h2><p id="ls"></p>
+<p>Start OBS first. Then press the button so the website shows the live player.</p>
+<button id="on">Show LIVE on website</button><button class="g" id="off">End live</button> <a class="b" href="live.html" target="_blank" style="background:#555">Open live page</a></div>
+
+<div class="box"><h2>Post a sermon</h2>
+<form id="sf">
+<label for="ti">Title</label><input id="ti" required>
+<label for="sp">Speaker</label><input id="sp" value="Prophet Paul Mokhathatsi">
+<label for="dt">Date</label><input id="dt" type="date" required>
+<label for="ur">Video link (YouTube or Facebook)</label><input id="ur" type="url" placeholder="https://...">
+<label for="sc">Scripture (optional)</label><input id="sc" placeholder="e.g. John 3:16">
+<label for="nt">Short note (optional)</label><textarea id="nt" rows="2"></textarea>
+<label class="chk"><input id="fb" type="checkbox" checked> Also post to the Facebook page</label>
+<button type="submit">Publish sermon</button></form></div>
+
+<div class="box" id="after" hidden><h2>Share on WhatsApp channel</h2>
+<p id="fbs"></p>
+<textarea id="wa" rows="6"></textarea>
+<button id="cp">Copy message</button><a class="b g" id="wl" target="_blank" rel="noopener" style="background:#25a244">Open WhatsApp channel</a>
+<p style="font-size:.9rem;color:#555">WhatsApp does not allow websites to post to channels. Copy, open the channel, paste, send.</p></div>
+
+<div class="box"><h2>Sermons on the website</h2><div id="list"></div></div>
+</div></main>
+<script src="config.js"></script>
+<script>
+var C=window.CFG,B="https://firestore.googleapis.com/v1/projects/"+C.projectId+"/databases/(default)/documents/",T=sessionStorage.getItem("t"),$=function(i){return document.getElementById(i)};
+$("dt").value=new Date().toISOString().slice(0,10);$("wl").href=C.whatsappChannel;
+function show(){var ok=!!T;$("login").hidden=ok;$("app").hidden=!ok;if(ok)load()}
+$("li").onclick=async function(){
+ var r=await fetch("https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key="+C.apiKey,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:$("em").value,password:$("pw").value,returnSecureToken:true})});
+ var d=await r.json();if(!r.ok){$("lm").textContent="Wrong email or password.";return}
+ T=d.idToken;sessionStorage.setItem("t",T);show();
+};
+$("lo").onclick=function(){sessionStorage.removeItem("t");T=null;show()};
+function api(path,method,body){
+ return fetch(B+path,{method:method||"GET",headers:{Authorization:"Bearer "+T,"Content-Type":"application/json"},body:body?JSON.stringify(body):undefined}).then(function(r){
+  if(r.status===401||r.status===403){alert("Session expired or not allowed. Please log in again.");$("lo").click();throw 0}
+  return r.json();
+ });
+}
+function setLive(on){return api("settings/live?updateMask.fieldPaths=live","PATCH",{fields:{live:{booleanValue:on}}}).then(function(){$("ls").textContent=on?"● The website is showing LIVE now.":"Live is OFF on the website."})}
+$("on").onclick=function(){setLive(true)};$("off").onclick=function(){setLive(false)};
+async function load(){
+ var d=await api("settings/live");$("ls").textContent=d.fields&&d.fields.live&&d.fields.live.booleanValue?"● The website is showing LIVE now.":"Live is OFF on the website.";
+ var s=await api("sermons?orderBy=date%20desc&pageSize=30"),g=$("list");g.textContent="";
+ (s.documents||[]).forEach(function(o){
+  var id=o.name.split("/").pop(),r=document.createElement("div");r.className="row";
+  var t=document.createElement("span");t.textContent=((o.fields.date||{}).stringValue||"")+" – "+((o.fields.title||{}).stringValue||"");
+  var b=document.createElement("button");b.className="sm";b.textContent="Delete";
+  b.onclick=async function(){if(confirm("Delete this sermon from the website? (Facebook posts are not deleted.)")){await api("sermons/"+encodeURIComponent(id),"DELETE");load()}};
+  r.append(t,b);g.append(r);
+ });
+}
+$("sf").onsubmit=async function(e){
+ e.preventDefault();var v=function(k){return $(k).value.trim()};
+ var rec={title:v("ti"),speaker:v("sp"),date:v("dt"),url:v("ur"),scripture:v("sc"),note:v("nt")},f={};
+ for(var k in rec)f[k]={stringValue:rec[k]};
+ await api("sermons","POST",{fields:f});
+ var base="🕊️ New sermon: "+rec.title+(rec.speaker?"\n"+rec.speaker:"")+(rec.scripture?"\n"+rec.scripture:"");
+ var foot="\n\nWind of Revival International Church";
+ $("wa").value=base+(rec.url?"\n\nWatch: "+rec.url:"")+foot+"\n"+C.siteUrl;$("after").hidden=false;
+ if($("fb").checked){
+  $("fbs").textContent="Posting to Facebook...";
+  fetch("/.netlify/functions/facebook-post",{method:"POST",headers:{Authorization:"Bearer "+T,"Content-Type":"application/json"},body:JSON.stringify({message:base+foot,link:rec.url||C.siteUrl})})
+   .then(function(r){$("fbs").textContent=r.ok?"✔ Posted to Facebook.":"Facebook post failed (the sermon is saved on the website). Post it by hand."})
+   .catch(function(){$("fbs").textContent="Facebook post failed (the sermon is saved on the website)."});
+ }else $("fbs").textContent="";
+ $("sf").reset();$("dt").value=new Date().toISOString().slice(0,10);$("sp").value="Prophet Paul Mokhathatsi";load();
+};
+$("cp").onclick=function(){navigator.clipboard.writeText($("wa").value);$("cp").textContent="Copied ✔"};
+show();
+</script></body></html>

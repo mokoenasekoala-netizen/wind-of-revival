@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Watch live – Wind of Revival International Church</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Outfit:wght@400;600&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-wr>
+<div id="bar"></div>
+<header id="hd"><div class="wrap">
+<a class="brand" href="index.html"><img src="images/logo.jpg" alt="Wind of Revival logo"><span>Wind of Revival<br>International Church</span></a>
+<nav aria-label="Main">
+<a href="index.html" data-en="Home" data-st="Lehae">Home</a>
+<a href="live.html" data-en="Live" data-st="Ka kotloloho">Live</a>
+<a href="sermons.html" data-en="Sermons" data-st="Lithuto">Sermons</a>
+<a href="index.html#services" data-en="Services" data-st="Lits'ebeletso">Services</a>
+<a href="index.html#connect" data-en="Connect" data-st="Ikopanye">Connect</a>
+</nav>
+<a class="lp" id="livepill" href="live.html" hidden data-en="LIVE" data-st="KA KOTLOLOHO">LIVE</a>
+<button class="lang" id="lang" aria-label="Switch language">Sesotho</button>
+</div></header>
+<main>
+<div class="ph"><div class="wrap">
+<h1 data-en="Watch live" data-st="Sheba ka kotloloho">Watch live</h1>
+<p data-en="Join our service from wherever you are. This page opens the video by itself when we start." data-st="Kena sebeletsong sa rōna u le kae kapa kae. Leqephe lena le tla bula video ka boeona ha re qala.">Join our service from wherever you are. This page opens the video by itself when we start.</p>
+</div></div>
+<section style="padding-top:50px"><div class="wrap">
+<div id="on" hidden>
+<div class="live on"><span class="badge" data-en="LIVE NOW" data-st="KA KOTLOLOHO">LIVE NOW</span><div class="vid"><iframe id="lf" title="Live service" allow="autoplay; fullscreen" allowfullscreen></iframe></div></div>
+<p class="p" data-en="No sound? Tap the video to turn the volume on." data-st="Ha u utloe molumo? Hatella video ho bula molumo.">No sound? Tap the video to turn the volume on.</p>
+</div>
+<div id="off" class="card" style="padding:34px">
+<h2 data-en="We are not live right now" data-st="Ha re ka kotloloho hona joale">We are not live right now</h2>
+<p class="p" data-en="Our next service is on Sunday at 09:00." data-st="Sebeletso sa rōna se latelang ke ka Sontaha ka 09:00.">Our next service is on Sunday at 09:00.</p>
+<div class="units"><div class="u"><b id="d">0</b><span data-en="days" data-st="matsatsi">days</span></div><div class="u"><b id="h">0</b><span data-en="hours" data-st="lihora">hours</span></div><div class="u"><b id="m">0</b><span data-en="min" data-st="metsotso">min</span></div><div class="u"><b id="s">0</b><span data-en="sec" data-st="metsotswana">sec</span></div></div>
+</div>
+<p style="margin-top:26px"><button class="btn" id="cl" data-en="Copy this page link" data-st="Kopitsa khokahano ea leqephe">Copy this page link</button><a class="btn o2" href="https://www.facebook.com/share/1CczEfKnVV/" target="_blank" rel="noopener">Facebook</a><a class="btn o2" href="https://whatsapp.com/channel/0029VaeK5VZHFxP1Ifrz6c2z" target="_blank" rel="noopener">WhatsApp</a></p>
+</div></section>
+<section style="padding-top:0"><div class="wrap">
+<h2 data-en="Latest sermon" data-st="Thuto ea morao tjena">Latest sermon</h2>
+<div class="grid" id="latest"><p class="p" data-en="Sermons will appear here after each service." data-st="Lithuto li tla hlaha mona ka mor'a sebeletso se seng le se seng.">Sermons will appear here after each service.</p></div>
+<p style="margin-top:26px"><a class="btn" href="sermons.html" data-en="All sermons" data-st="Lithuto tsohle">All sermons</a></p>
+</div></section>
+</main>
+<footer>
+<svg class="wave" viewBox="0 0 1200 90" preserveAspectRatio="none" aria-hidden="true"><path d="M0 50 C200 100 400 0 600 40 S1000 90 1200 30 V90 H0Z"/></svg>
+<div class="wrap"><img src="images/logo.jpg" alt="" width="64" height="64" style="border-radius:50%"><h3 style="margin:.4em 0 .1em">Wind of Revival International Church</h3><p style="margin:0 0 14px;opacity:.85">Hanyenye Maletlatsoana, Maputsoe, Lesotho</p><small>© 2026 Wind of Revival International Church</small></div>
+</footer>
+<script src="config.js"></script>
+<script src="common.js"></script>
+<script>
+(function(){
+ var on=document.getElementById("on"),off=document.getElementById("off"),fr=document.getElementById("lf"),cur=null;
+ function chk(){WR.isLive().then(function(v){
+  if(v===cur)return;cur=v;on.hidden=!v;off.hidden=v;fr.src=v?WR.liveSrc():"about:blank";
+ })}
+ if(WR.ready){
+  chk();setInterval(chk,30000);
+  WR.sermons(1).then(function(d){if(d.length){var g=document.getElementById("latest");g.textContent="";g.append(WR.card(d[0],0))}});
+ }
+ WR.countdown();setInterval(WR.countdown,1000);
+ document.getElementById("cl").onclick=function(){navigator.clipboard.writeText(location.href.split("#")[0]);this.textContent="✔"};
+})();
+</script>
+</body>
+</html>
