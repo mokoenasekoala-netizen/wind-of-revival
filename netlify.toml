@@ -26,3 +26,10 @@
   for = "/crew"
   [headers.values]
     X-Robots-Tag = "noindex, nofollow"
+
+# media.woric.org opens the media crew login (the address bar stays media.woric.org)
+[[redirects]]
+  from = "https://media.woric.org/"
+  to = "/admin.html"
+  status = 200
+  force = true
