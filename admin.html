@@ -15,6 +15,8 @@ button.g{background:#555}button.sm{padding:4px 12px;font-size:.85rem;background:
 .row span{flex:1}.row .sm,.row a{margin:0 0 0 4px}
 #ls{font-weight:600}.chk{display:flex;gap:8px;align-items:center;font-weight:400}.chk input{width:auto}
 .hint{font-size:.88rem;color:#555;margin:6px 0}
+.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;margin-top:14px}
+.tn img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;display:block}.tn button{width:100%;margin:4px 0 0}
 </style></head><body><main>
 <div id="login" class="box"><h1>Media crew login</h1>
 <label for="em">Email</label><input id="em" type="email" autocomplete="username">
@@ -25,7 +27,8 @@ button.g{background:#555}button.sm{padding:4px 12px;font-size:.85rem;background:
 <h1>Media crew <button class="g sm" id="lo">Log out</button></h1>
 
 <div class="box"><h2>Live service</h2><p id="ls"></p>
-<p>Start OBS first. Then press the button so the website shows the live player.</p>
+<p>1) Start OBS and press Go Live in Facebook Live Producer (set it to Public). 2) Open the live video on Facebook and paste its link below. 3) Press the button.</p>
+<label for="lu">Facebook link of today's live video</label><input id="lu" type="url" placeholder="https://www.facebook.com/.../videos/...">
 <button id="on">Show LIVE on website</button><button class="g" id="off">End live</button> <a class="b" href="live.html" target="_blank" style="background:#555">Open live page</a></div>
 
 <div class="box"><h2 id="ed">Post a sermon</h2>
@@ -47,6 +50,21 @@ button.g{background:#555}button.sm{padding:4px 12px;font-size:.85rem;background:
 <textarea id="wa" rows="8"></textarea>
 <button id="cp">Copy message</button><a class="b" id="wl" target="_blank" rel="noopener" style="background:#25a244">Open WhatsApp channel</a>
 <p class="hint">WhatsApp does not allow websites to post to channels. Copy, open the channel, paste, send.</p></div>
+
+<div class="box"><h2>Gallery photos</h2>
+<label for="gf">Choose photos (you can pick many at once)</label><input id="gf" type="file" accept="image/*" multiple>
+<label for="gc">Caption (optional, used for all the photos you choose)</label><input id="gc" placeholder="e.g. Sunday service, 8 Nov">
+<p class="hint">Photos are made smaller automatically. Please get permission before showing people, and especially children.</p>
+<button id="gu">Upload photos</button> <span id="gs"></span>
+<div class="thumbs" id="gl"></div></div>
+
+<div class="box"><h2>Testimonies</h2>
+<form id="tf">
+<label for="tn">Name (first name, or "Anonymous")</label><input id="tn" required>
+<label for="tt">Testimony</label><textarea id="tt" rows="8" required></textarea>
+<label class="chk"><input id="tp" type="checkbox" required> The person gave permission to share this on the website</label>
+<button type="submit">Post testimony</button></form>
+<div id="tl" style="margin-top:14px"></div></div>
 
 <div class="box"><h2>Sermons on the website</h2><div id="list"></div></div>
 </div></main>
@@ -72,11 +90,11 @@ function api(path,method,body){
   });
  });
 }
-function setLive(on){return api("settings/live?updateMask.fieldPaths=live","PATCH",{fields:{live:{booleanValue:on}}}).then(function(){$("ls").textContent=on?"● The website is showing LIVE now.":"Live is OFF on the website."})}
+function setLive(on){var u=on?$("lu").value.trim():"";if(on&&!/^https?:\/\/([\w-]+\.)?(facebook\.com|fb\.watch|youtube\.com|youtu\.be)\//i.test(u)){alert("Paste the link of today's live video (from Facebook) first.");return Promise.resolve()}return api("settings/live?updateMask.fieldPaths=live&updateMask.fieldPaths=url","PATCH",{fields:{live:{booleanValue:on},url:{stringValue:u}}}).then(function(){$("ls").textContent=on?"● The website is showing LIVE now.":"Live is OFF on the website."})}
 $("on").onclick=function(){setLive(true)};$("off").onclick=function(){setLive(false)};
 function sv(o,k){return(o.fields&&o.fields[k]&&o.fields[k].stringValue)||""}
-async function load(){
- var d=await api("settings/live");$("ls").textContent=d.fields&&d.fields.live&&d.fields.live.booleanValue?"● The website is showing LIVE now.":"Live is OFF on the website.";
+async function load(){loadGallery();loadTestimonies();
+ var d=await api("settings/live");$("ls").textContent=d.fields&&d.fields.live&&d.fields.live.booleanValue?"● The website is showing LIVE now.":"Live is OFF on the website.";if(sv(d,"url"))$("lu").value=sv(d,"url");
  var s=await api("sermons?orderBy=date%20desc&pageSize=30&mask.fieldPaths=title&mask.fieldPaths=date&mask.fieldPaths=preview"),g=$("list");g.textContent="";
  (s.documents||[]).forEach(function(o){
   var id=o.name.split("/").pop(),r=document.createElement("div");r.className="row";
@@ -128,5 +146,47 @@ $("sf").onsubmit=async function(e){
  }catch(err){}finally{$("sb").disabled=false}
 };
 $("cp").onclick=function(){navigator.clipboard.writeText($("wa").value);$("cp").textContent="Copied ✔"};
+
+function shrink(file,max,q){return new Promise(function(res,rej){var img=new Image(),u=URL.createObjectURL(file);img.onload=function(){var r=Math.min(1,max/Math.max(img.width,img.height)),c=document.createElement("canvas");c.width=Math.round(img.width*r);c.height=Math.round(img.height*r);c.getContext("2d").drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(u);res(c.toDataURL("image/jpeg",q))};img.onerror=function(){rej(new Error("unreadable"))};img.src=u})}
+async function loadGallery(){
+ var s=await api("gallery?orderBy=date%20desc&pageSize=60&mask.fieldPaths=caption&mask.fieldPaths=thumb"),g=$("gl");g.textContent="";
+ (s.documents||[]).forEach(function(o){
+  var id=o.name.split("/").pop(),w=document.createElement("div");w.className="tn";
+  var im=document.createElement("img");im.src=sv(o,"thumb");im.alt=sv(o,"caption");im.title=sv(o,"caption");
+  var b=document.createElement("button");b.className="sm";b.textContent="Delete";
+  b.onclick=async function(){if(confirm("Delete this photo from the website?")){await api("gallery/"+encodeURIComponent(id),"DELETE");loadGallery()}};
+  w.append(im,b);g.append(w);
+ });
+}
+$("gu").onclick=async function(){
+ var files=Array.prototype.slice.call($("gf").files);if(!files.length){alert("Choose photos first.");return}
+ $("gu").disabled=true;var ok=0,bad=0;
+ for(var i=0;i<files.length;i++){
+  try{
+   $("gs").textContent="Uploading "+(i+1)+" of "+files.length+"...";
+   var q=.8,full=await shrink(files[i],1400,q);
+   while(full.length>850000&&q>.4){q-=.1;full=await shrink(files[i],1400,q)}
+   var th=await shrink(files[i],420,.72);
+   await api("gallery","POST",{fields:{caption:{stringValue:$("gc").value.trim()},date:{stringValue:new Date(Date.now()-i).toISOString()},thumb:{stringValue:th},full:{stringValue:full}}});
+   ok++;
+  }catch(e){bad++}
+ }
+ $("gs").textContent=ok+" uploaded"+(bad?", "+bad+" failed (use JPG or PNG photos)":".");
+ $("gf").value="";$("gu").disabled=false;loadGallery();
+};
+async function loadTestimonies(){
+ var s=await api("testimonies?orderBy=date%20desc&pageSize=50&mask.fieldPaths=name&mask.fieldPaths=text"),g=$("tl");g.textContent="";
+ (s.documents||[]).forEach(function(o){
+  var id=o.name.split("/").pop(),r=document.createElement("div");r.className="row";
+  var t=document.createElement("span"),x=sv(o,"text");t.textContent=sv(o,"name")+": "+x.slice(0,70)+(x.length>70?"…":"");
+  var b=document.createElement("button");b.className="sm";b.textContent="Delete";
+  b.onclick=async function(){if(confirm("Delete this testimony from the website?")){await api("testimonies/"+encodeURIComponent(id),"DELETE");loadTestimonies()}};
+  r.append(t,b);g.append(r);
+ });
+}
+$("tf").onsubmit=async function(e){
+ e.preventDefault();
+ try{await api("testimonies","POST",{fields:{name:{stringValue:$("tn").value.trim()},text:{stringValue:$("tt").value.trim()},date:{stringValue:new Date().toISOString()}}});$("tf").reset();loadTestimonies()}catch(err){}
+};
 show();
 </script></body></html>

@@ -6,11 +6,34 @@ function f(o,k){return o.fields&&o.fields[k]?(o.fields[k].stringValue||""):""}
 function yt(u){var m=(u||"").match(/(?:youtu\.be\/|v=|embed\/|live\/)([\w-]{11})/);return m&&m[1]}
 var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add("on");io.unobserve(e.target)}})},{threshold:.1});
 var MASK=["title","speaker","date","url","scripture","note","preview"].map(function(k){return"&mask.fieldPaths="+k}).join("");
-var WR=window.WR={ready:ready,f:f,yt:yt,
+function embed(u){
+ var y=yt(u);if(y)return"https://www.youtube.com/embed/"+y;
+ if(/^https?:\/\/([\w-]+\.)?(facebook\.com|fb\.watch)\//i.test(u||""))return"https://www.facebook.com/plugins/video.php?show_text=false&href="+encodeURIComponent(u);
+ return"";
+}
+function play(e){return e+(e.indexOf("youtube")>-1?"?autoplay=1&mute=1":"&autoplay=true")}
+var WR=window.WR={embed:embed,ready:ready,f:f,yt:yt,
  sermons:function(n){return fetch(B+"sermons?orderBy=date%20desc&pageSize="+n+MASK).then(function(r){return r.json()}).then(function(d){return d.documents||[]}).catch(function(){return[]})},
+ id:function(o){return o.name.split("/").pop()},
+ list:function(col,n,fs){return fetch(B+col+"?orderBy=date%20desc&pageSize="+n+(fs||[]).map(function(k){return"&mask.fieldPaths="+k}).join("")).then(function(r){return r.json()}).then(function(d){return d.documents||[]}).catch(function(){return[]})},
+ doc:function(col,id){return fetch(B+col+"/"+encodeURIComponent(id)).then(function(r){return r.ok?r.json():null}).catch(function(){return null})},
+ tile:function(o,i,open){
+  var t=document.createElement("button");t.type="button";t.className="gt rv";t.style.setProperty("--i",i%4);
+  var im=document.createElement("img");im.alt=f(o,"caption")||"Photo";im.loading="lazy";im.src=f(o,"thumb");t.append(im);
+  if(f(o,"caption")){var s=document.createElement("span");s.textContent=f(o,"caption");t.append(s)}
+  t.onclick=open;io.observe(t);return t;
+ },
+ quote:function(o,i,short){
+  var c=document.createElement("figure");c.className="card tq rv";c.style.setProperty("--i",i%3);
+  var t=f(o,"text");if(short&&t.length>260)t=t.slice(0,260).replace(/\s+\S*$/,"")+"…";
+  var q=document.createElement("blockquote");q.textContent=t;
+  var n=document.createElement("figcaption");n.textContent="— "+(f(o,"name")||"A member");
+  c.append(q,n);io.observe(c);return c;
+ },
  sermon:function(id){return fetch(B+"sermons/"+encodeURIComponent(id)).then(function(r){return r.ok?r.json():null}).catch(function(){return null})},
- isLive:function(){return fetch(B+"settings/live").then(function(r){return r.ok?r.json():null}).then(function(d){return !!(d&&d.fields&&d.fields.live&&d.fields.live.booleanValue===true)}).catch(function(){return false})},
- liveSrc:function(){return "https://www.youtube.com/embed/live_stream?channel="+C.youtubeChannelId+"&autoplay=1&mute=1"},
+ live:function(){return fetch(B+"settings/live").then(function(r){return r.ok?r.json():null}).then(function(d){var on=!!(d&&d.fields&&d.fields.live&&d.fields.live.booleanValue===true);var u=on&&d.fields.url?(d.fields.url.stringValue||""):"";on=on&&!!embed(u);return{on:on,url:on?u:""}}).catch(function(){return{on:false,url:""}})},
+ isLive:function(){return WR.live().then(function(x){return x.on})},
+ liveSrc:function(u){var e=embed(u);return e?play(e):""},
  card:function(o,i){
   var rid=o.name.split("/").pop(),readUrl="sermon.html?id="+encodeURIComponent(rid),hasRead=!!f(o,"preview"),u=f(o,"url"),id=yt(u),c=document.createElement("div");c.className="card sv rv";c.style.setProperty("--i",i%3);c.tabIndex=0;c.setAttribute("role","button");
   var th=document.createElement("div");th.className="th";if(id)th.style.backgroundImage="url(https://i.ytimg.com/vi/"+id+"/hqdefault.jpg)";
@@ -25,7 +48,8 @@ var WR=window.WR={ready:ready,f:f,yt:yt,
    a.textContent=st?"Bala thuto →":"Read the sermon →";a.onclick=function(e){e.stopPropagation()};bd.append(a)}
   c.append(th,bd);
   function go(){
-   if(id){if(th.classList.contains("pl"))return;th.textContent="";var fr=document.createElement("iframe");fr.src="https://www.youtube.com/embed/"+id+"?autoplay=1";fr.title=h.textContent;fr.allow="autoplay; fullscreen";fr.allowFullscreen=true;th.append(fr);th.classList.add("pl")}
+   var em=embed(u);
+   if(em){if(th.classList.contains("pl"))return;th.textContent="";var fr=document.createElement("iframe");fr.src=em+(em.indexOf("youtube")>-1?"?autoplay=1":"&autoplay=true");fr.title=h.textContent;fr.allow="autoplay; fullscreen";fr.allowFullscreen=true;th.append(fr);th.classList.add("pl")}
    else if(/^https?:/.test(u))open(u,"_blank","noopener");
    else if(hasRead)location.href=readUrl;
   }

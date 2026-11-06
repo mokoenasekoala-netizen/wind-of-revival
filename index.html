@@ -16,6 +16,8 @@
 <a href="#about" data-en="About" data-st="Ka rōna">About</a>
 <a href="live.html" data-en="Live" data-st="Ka kotloloho">Live</a>
 <a href="sermons.html" data-en="Sermons" data-st="Lithuto">Sermons</a>
+<a href="gallery.html" data-en="Gallery" data-st="Lifoto">Gallery</a>
+<a href="testimonies.html" data-en="Testimonies" data-st="Bopaki">Testimonies</a>
 <a href="#services" data-en="Services" data-st="Lits'ebeletso">Services</a>
 <a href="#connect" data-en="Connect" data-st="Ikopanye">Connect</a>
 <a href="#pray" data-en="Prayer" data-st="Thapelo">Prayer</a>
@@ -64,6 +66,18 @@
 <div class="live" id="live"><span class="badge" data-en="LIVE NOW" data-st="KA KOTLOLOHO">LIVE NOW</span><div class="vid"><iframe id="lf" title="Live service" allow="autoplay; fullscreen" allowfullscreen></iframe></div></div>
 <div class="grid" id="sg"><p class="p" data-en="Sermons will appear here after each service." data-st="Lithuto li tla hlaha mona ka mor'a sebeletso se seng le se seng.">Sermons will appear here after each service.</p></div>
 <p style="margin-top:26px"><a class="btn" href="sermons.html" data-en="All sermons" data-st="Lithuto tsohle">All sermons</a><a class="btn o2" href="live.html" data-en="Live page" data-st="Leqephe la ka kotloloho">Live page</a></p>
+</div></section>
+
+<section id="gallery" class="alt-bg"><div class="wrap">
+<h2 class="rv" data-en="Gallery" data-st="Lifoto">Gallery</h2>
+<div class="gg" id="gp"><p class="p" data-en="Photos will appear here soon." data-st="Lifoto li tla hlaha mona haufinyane.">Photos will appear here soon.</p></div>
+<p style="margin-top:26px"><a class="btn" href="gallery.html" data-en="See all photos" data-st="Sheba lifoto tsohle">See all photos</a></p>
+</div></section>
+
+<section id="testimonies"><div class="wrap">
+<h2 class="rv" data-en="Testimonies" data-st="Bopaki">Testimonies</h2>
+<div class="grid" id="tp"><p class="p" data-en="Testimonies will appear here soon." data-st="Bopaki bo tla hlaha mona haufinyane.">Testimonies will appear here soon.</p></div>
+<p style="margin-top:26px"><a class="btn" href="testimonies.html" data-en="Read more and share yours" data-st="Bala haholoanyane 'me u arolelane ba hao">Read more and share yours</a></p>
 </div></section>
 
 <section id="services"><div class="wrap">
@@ -138,12 +152,20 @@ document.getElementById("pf").onsubmit=function(e){
 (function(){
  if(!WR.ready)return;
  var box=document.getElementById("live"),fr=document.getElementById("lf");
- function chk(){WR.isLive().then(function(on){
-  if(on&&!box.classList.contains("on")){fr.src=WR.liveSrc();box.classList.add("on")}
-  if(!on&&box.classList.contains("on")){box.classList.remove("on");fr.src="about:blank"}
+ function chk(){WR.live().then(function(x){
+  var s=x.on?WR.liveSrc(x.url):"";
+  if(x.on&&fr.getAttribute("data-s")!==s){fr.src=s;fr.setAttribute("data-s",s);box.classList.add("on")}
+  if(!x.on&&box.classList.contains("on")){box.classList.remove("on");fr.src="about:blank";fr.removeAttribute("data-s")}
  })}
  chk();setInterval(chk,60000);
  WR.sermons(6).then(function(d){var g=document.getElementById("sg");if(!d.length)return;g.textContent="";d.forEach(function(o,i){g.append(WR.card(o,i))})});
+})();
+</script>
+<script>
+(function(){
+ if(!WR.ready)return;
+ WR.list("gallery",6,["caption","thumb"]).then(function(d){var g=document.getElementById("gp");if(!d.length)return;g.textContent="";d.forEach(function(o,i){g.append(WR.tile(o,i,function(){location.href="gallery.html#"+WR.id(o)}))})});
+ WR.list("testimonies",3,["name","text"]).then(function(d){var g=document.getElementById("tp");if(!d.length)return;g.textContent="";d.forEach(function(o,i){g.append(WR.quote(o,i,true))})});
 })();
 </script>
 </body>

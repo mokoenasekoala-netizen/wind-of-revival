@@ -15,6 +15,8 @@
 <a href="index.html" data-en="Home" data-st="Lehae">Home</a>
 <a href="live.html" data-en="Live" data-st="Ka kotloloho">Live</a>
 <a href="sermons.html" data-en="Sermons" data-st="Lithuto">Sermons</a>
+<a href="gallery.html" data-en="Gallery" data-st="Lifoto">Gallery</a>
+<a href="testimonies.html" data-en="Testimonies" data-st="Bopaki">Testimonies</a>
 <a href="index.html#services" data-en="Services" data-st="Lits'ebeletso">Services</a>
 <a href="index.html#connect" data-en="Connect" data-st="Ikopanye">Connect</a>
 </nav>
@@ -48,13 +50,13 @@
  if(!id||!WR.ready){nf();return}
  WR.sermon(id).then(function(o){
   if(!o||!o.fields){nf();return}
-  var f=function(k){return WR.f(o,k)},u=f("url"),yid=WR.yt(u);
+  var f=function(k){return WR.f(o,k)},u=f("url"),em=WR.embed(u);
   $("t").textContent=f("title");document.title=f("title")+" – Wind of Revival International Church";
   $("mt").textContent=[f("speaker"),f("date"),f("scripture")].filter(Boolean).join(" · ");
-  if(yid){
+  if(em){
    var w=document.createElement("div");w.className="live on";w.style.marginBottom="34px";
    var v=document.createElement("div");v.className="vid";
-   var fr=document.createElement("iframe");fr.src="https://www.youtube.com/embed/"+yid;fr.title=f("title");fr.allow="fullscreen";fr.allowFullscreen=true;
+   var fr=document.createElement("iframe");fr.src=em;fr.title=f("title");fr.allow="fullscreen";fr.allowFullscreen=true;
    v.append(fr);w.append(v);$("vid").append(w);
   }else if(/^https?:/.test(u)){
    var a=document.createElement("a");a.className="btn";a.href=u;a.target="_blank";a.rel="noopener";a.textContent="▶ Watch the video";
